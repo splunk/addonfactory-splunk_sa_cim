@@ -107,6 +107,18 @@
         },
         {
           "comment": {
+            "description": "The user agent through which the request was made, such as Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) or aws-cli/2.0.0 Python/3.7.4 Darwin/18.7.0 botocore/2.0.0dev4."
+          },
+          "fieldName": "user_agent",
+          "displayName": "user_agent",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": false,
+          "hidden": false
+        },
+        {
+          "comment": {
             "description": "This field is automatically provided by asset and identity correlation features of applications like Splunk Enterprise Security. Do not define extractions for this field when writing add-ons.",
             "ta_relevant": false
           },
@@ -138,6 +150,42 @@
           },
           "fieldName": "user_priority",
           "displayName": "user_priority",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": false,
+          "hidden": false
+        },
+        {
+          "comment": {
+            "description": "The type of the user involved in the event or who initiated the event, such as IAMUser, Admin, or System. For account management events, this should represent the type of the user changed by the request."
+          },
+          "fieldName": "user_type",
+          "displayName": "user_type",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": false,
+          "hidden": false
+        },
+        {
+          "comment": {
+            "description": "The account associated with the change."
+          },
+          "fieldName": "vendor_account",
+          "displayName": "vendor_account",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": false,
+          "hidden": false
+        },
+        {
+          "comment": {
+            "description": "The data center region where the change occurred, such as us-west-2."
+          },
+          "fieldName": "vendor_region",
+          "displayName": "vendor_region",
           "type": "string",
           "fieldSearch": "",
           "required": false,
@@ -444,6 +492,26 @@
           "expression": "if(isnull(user) OR user=\"\",\"unknown\",user)"
         },
         {
+          "calculationID": "All_Changes_fillnull_user_name",
+          "calculationType": "Eval",
+          "outputFields": [
+            {
+              "comment": {
+                "description": "The user name of the user or entity performing the change. For account changes, this is the account that was changed (see src_user_name for user or entity performing the change).",
+                "recommended": true
+              },
+              "fieldName": "user_name",
+              "displayName": "user_name",
+              "type": "string",
+              "fieldSearch": "",
+              "required": false,
+              "multivalue": false,
+              "hidden": false
+            }
+          ],
+          "expression": "if(isnull(user_name) OR user_name=\"\",\"unknown\",user_name)"
+        },
+        {
           "calculationID": "All_Changes_vendor_product",
           "calculationType": "Eval",
           "outputFields": [
@@ -469,7 +537,7 @@
           "outputFields": [
             {
               "comment": {
-                "description": "The action performed on the resource.",
+                "description": "The action attempted on the resource, regardless of success or failure.",
                 "expected_values": [
                   "acl_modified",
                   "cleared",
@@ -478,7 +546,9 @@
                   "modified",
                   "read",
                   "stopped",
-                  "updated"
+                  "updated",
+                  "started",
+                  "restarted"
                 ],
                 "recommended": true
               },
@@ -500,7 +570,7 @@
         }
       ],
       "children": [
-        
+
       ]
     },
     {
@@ -514,10 +584,10 @@
       "displayName": "Auditing Changes",
       "parentName": "All_Changes",
       "fields": [
-        
+
       ],
       "calculations": [
-        
+
       ],
       "constraints": [
         {
@@ -525,7 +595,7 @@
         }
       ],
       "children": [
-        
+
       ]
     },
     {
@@ -539,10 +609,10 @@
       "displayName": "Endpoint Changes",
       "parentName": "All_Changes",
       "fields": [
-        
+
       ],
       "calculations": [
-        
+
       ],
       "constraints": [
         {
@@ -550,7 +620,7 @@
         }
       ],
       "children": [
-        
+
       ]
     },
     {
@@ -564,10 +634,10 @@
       "displayName": "Endpoint Restarts",
       "parentName": "Endpoint_Changes",
       "fields": [
-        
+
       ],
       "calculations": [
-        
+
       ],
       "constraints": [
         {
@@ -575,7 +645,7 @@
         }
       ],
       "children": [
-        
+
       ]
     },
     {
@@ -589,10 +659,10 @@
       "displayName": "Other Endpoint Changes",
       "parentName": "Endpoint_Changes",
       "fields": [
-        
+
       ],
       "calculations": [
-        
+
       ],
       "constraints": [
         {
@@ -600,7 +670,7 @@
         }
       ],
       "children": [
-        
+
       ]
     },
     {
@@ -614,10 +684,100 @@
       "displayName": "Network Changes",
       "parentName": "All_Changes",
       "fields": [
-        
+        {
+          "comment": {
+            "description": "For network events, the outgoing traffic for a specific destination IP address range.  Specify a single IP address, or an IP address range in CIDR notation (for example, 203.0.113.5/32)",
+            "ta_relevant": false
+          },
+          "fieldName": "dest_ip_range",
+          "displayName": "dest_ip_range",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": true,
+          "hidden": false
+        },
+        {
+          "comment": {
+            "description": "For network events, this field represents destination port or range. For example, 80 or 8000 - 8080 or 80,443",
+            "ta_relevant": false
+          },
+          "fieldName": "dest_port_range",
+          "displayName": "dest_port_range",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": true,
+          "hidden": false
+        },
+        {
+          "comment": {
+            "description": "For network events, this field represents whether the traffic is inbound or outbound.",
+            "ta_relevant": false
+          },
+          "fieldName": "direction",
+          "displayName": "direction",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": true,
+          "hidden": false
+        },
+        {
+          "comment": {
+            "description": "This field represents the protocol for the network event rule.",
+            "ta_relevant": false
+          },
+          "fieldName": "protocol",
+          "displayName": "protocol",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": true,
+          "hidden": false
+        },
+        {
+          "comment": {
+            "description": "For network events, this field represents whether to allow or deny traffic.",
+            "ta_relevant": false
+          },
+          "fieldName": "rule_action",
+          "displayName": "rule_action",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": true,
+          "hidden": false
+        },
+        {
+          "comment": {
+            "description": "For network events, this field represents the incoming traffic from a specific source IP address or range. Specify a single IP address, or an IP address range in CIDR notation (for example, 203.0.113.5/32)",
+            "ta_relevant": false
+          },
+          "fieldName": "src_ip_range",
+          "displayName": "src_ip_range",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": true,
+          "hidden": false
+        },
+        {
+          "comment": {
+            "description": "For network events, this field represents source port or range. For example, 80 or 8000 - 8080 or 80,443",
+            "ta_relevant": false
+          },
+          "fieldName": "src_port_range",
+          "displayName": "src_port_range",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": true,
+          "hidden": false
+        }
       ],
       "calculations": [
-        
+
       ],
       "constraints": [
         {
@@ -625,7 +785,7 @@
         }
       ],
       "children": [
-        
+
       ]
     },
     {
@@ -639,10 +799,10 @@
       "displayName": "Device Restarts",
       "parentName": "Network_Changes",
       "fields": [
-        
+
       ],
       "calculations": [
-        
+
       ],
       "constraints": [
         {
@@ -650,7 +810,7 @@
         }
       ],
       "children": [
-        
+
       ]
     },
     {
@@ -697,6 +857,18 @@
           },
           "fieldName": "src_user_priority",
           "displayName": "src_user_priority",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": false,
+          "hidden": false
+        },
+        {
+          "comment": {
+            "description": "For account management events, this should represent the type of the user changed by the request."
+          },
+          "fieldName": "src_user_type",
+          "displayName": "src_user_type",
           "type": "string",
           "fieldSearch": "",
           "required": false,
@@ -764,6 +936,26 @@
             }
           ],
           "expression": "if(isnull(src_user) OR src_user=\"\",\"unknown\",src_user)"
+        },
+        {
+          "calculationID": "Account_Management_fillnull_src_user_name",
+          "calculationType": "Eval",
+          "outputFields": [
+            {
+              "comment": {
+                "description": "For account changes, the user name of the user or entity performing the change.",
+                "recommended": true
+              },
+              "fieldName": "src_user_name",
+              "displayName": "src_user_name",
+              "type": "string",
+              "fieldSearch": "",
+              "required": false,
+              "multivalue": false,
+              "hidden": false
+            }
+          ],
+          "expression": "if(isnull(src_user_name) OR src_user_name=\"\",\"unknown\",src_user_name)"
         }
       ],
       "constraints": [
@@ -772,7 +964,7 @@
         }
       ],
       "children": [
-        
+
       ]
     },
     {
@@ -786,10 +978,10 @@
       "displayName": "Created Accounts",
       "parentName": "Account_Management",
       "fields": [
-        
+
       ],
       "calculations": [
-        
+
       ],
       "constraints": [
         {
@@ -797,7 +989,7 @@
         }
       ],
       "children": [
-        
+
       ]
     },
     {
@@ -811,10 +1003,10 @@
       "displayName": "Deleted Accounts",
       "parentName": "Account_Management",
       "fields": [
-        
+
       ],
       "calculations": [
-        
+
       ],
       "constraints": [
         {
@@ -822,7 +1014,7 @@
         }
       ],
       "children": [
-        
+
       ]
     },
     {
@@ -836,10 +1028,10 @@
       "displayName": "Locked Accounts",
       "parentName": "Account_Management",
       "fields": [
-        
+
       ],
       "calculations": [
-        
+
       ],
       "constraints": [
         {
@@ -847,7 +1039,7 @@
         }
       ],
       "children": [
-        
+
       ]
     },
     {
@@ -861,10 +1053,10 @@
       "displayName": "Updated Accounts",
       "parentName": "Account_Management",
       "fields": [
-        
+
       ],
       "calculations": [
-        
+
       ],
       "constraints": [
         {
@@ -872,8 +1064,68 @@
         }
       ],
       "children": [
-        
+
       ]
+    },
+    {
+      "comment": {
+        "tags": [
+          "change",
+          "instance"
+        ]
+      },
+      "objectName": "Instance_Changes",
+      "displayName": "Instance Changes",
+      "parentName": "All_Changes",
+      "fields": [],
+      "calculations": [
+        {
+          "calculationID": "Instance_fillnull_image_id",
+          "calculationType": "Eval",
+          "outputFields": [
+            {
+              "comment": {
+                "description": "For create instance events, this field represents the image ID used for creating the instance such as the OS, applications, installed libraries, and more.",
+                "recommended": true
+              },
+              "fieldName": "image_id",
+              "displayName": "image_id",
+              "type": "string",
+              "fieldSearch": "",
+              "required": false,
+              "multivalue": false,
+              "hidden": false
+            }
+          ],
+          "expression": "if(isnull(image_id) OR image_id=\"\",\"unknown\",image_id)"
+        },
+        {
+          "calculationID": "Instance_fillnull_instance_type",
+          "calculationType": "Eval",
+          "outputFields": [
+            {
+              "comment": {
+                "description": "For create instance events, this field represents the type of instance to build such as the combination of CPU, memory, storage, and network capacity.",
+                "recommended": true
+              },
+              "fieldName": "instance_type",
+              "displayName": "instance_type",
+              "type": "string",
+              "fieldSearch": "",
+              "required": false,
+              "multivalue": false,
+              "hidden": false
+            }
+          ],
+          "expression": "if(isnull(instance_type) OR instance_type=\"\",\"unknown\",instance_type)"
+        }
+      ],
+      "constraints": [
+        {
+          "search": "tag=instance"
+        }
+      ],
+      "children": []
     }
   ]
 }

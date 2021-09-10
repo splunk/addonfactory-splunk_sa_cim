@@ -1,28 +1,25 @@
-.dashboard-body {
-  padding: 0px;
+.section-header {
+  border-bottom: 1px solid #C3CBD4;
 }
-.dashboard-header {
-  padding: 10px 20px 20px 20px;
-}
-.dashboard-header div.breadcrumb {
-  padding-top: 20px;
-}
-.panel-body.html {
-  padding: 0px !important;
-}
-.dashboard-body .dashboard-row {
-  margin: 0 auto 30px auto;
-  width: 70%;
-  min-width: 1000px;
+.section-header .title {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  font-size: 24px;
 }
 .cimSetupWrapper {
   border: 1px solid #ccc;
-}
-#cim_setup_container .header {
-  padding: 20px;
+  margin: 30px auto;
+  width: 70%;
+  min-width: 1000px;
 }
 #cim_setup_container .modal-footer {
-  padding: 20px 10px 20px 10px;
+  border-top: 1px solid #C3CBD4;
+}
+#cim_setup_container .modal-header {
+  border-bottom: 1px solid #C3CBD4;
+}
+#cim_setup_container .modal-body {
+  padding: 20px;
 }
 #cim_setup_container .alert {
   font-size: 12px;
@@ -36,13 +33,16 @@
 .selectModelColumns {
   position: relative;
 }
+.tab {
+  display: inline-block;
+}
 .layoutBodyColumns {
-  top: 5px;
+  top: 0;
   border-top: 1px solid #ccc;
-  border-bottom: 1px solid #ccc;
   bottom: 0;
   background-color: #fff;
   overflow: auto;
+  position: relative;
 }
 .layoutColLeft {
   width: 360px;
@@ -61,9 +61,14 @@
 .layoutColRight .tab-pane {
   margin: 12px 0 12px 20px;
 }
+.tab-pane-main {
+  display: none;
+}
+.tab-pane-main.active {
+  display: block;
+}
 .layoutRow {
   overflow: hidden;
-  position: absolute;
   left: 0;
   right: 0;
   min-height: 600px;
@@ -84,33 +89,33 @@
 .inputForm {
   margin: 20px;
 }
-.datamodel_head {
-  font-size: 16px;
-  padding: 20px;
-  border-right: 1px solid #ccc;
-}
-.datamodel_item {
+.sideTabItem {
   padding: 10px 30px 10px 20px;
   position: relative;
   font-size: 14px;
   border-right: 1px solid #ccc;
   margin-left: 40px;
   cursor: pointer;
+  margin-right: -1px;
 }
-.datamodel_item:hover {
+.sideTabItem:hover {
   background: #DDD;
 }
-.datamodel_list .link-wrap {
+.sideTabList {
+  padding-top: 10px;
+  border-right: 1px solid #CCC;
+}
+.sideTabList .link-wrap {
   display: block;
   text-decoration: none !important;
 }
-.datamodel_item.selected {
+.sideTabItem.selected {
   color: #666;
   background-color: #fff;
   border: 1px solid #ccc;
   border-right: 0px;
 }
-.datamodel_name {
+.sideTabName {
   line-height: 20px;
 }
 .indexes_list {
@@ -148,6 +153,7 @@
 
 .nav.nav-tabs {
   border-top-style: none;
+  border-bottom: none;
 }
 
 .control.btn-group {
@@ -183,4 +189,32 @@ a.dropdown-toggle.disabled {
   width: 100%;
   text-align: center;
   padding: 30px;
+}
+
+/* Manage API Styles */
+.layoutColRight .tab-pane.manageAPIKeyForm {
+    margin: 12px 20px;
+}
+
+.manageAPIKeyForm input{
+    width: 100%
+}
+
+.manageAPIKeyForm .actionButtons {
+    text-align: center;
+}
+
+.manageAPIKeyForm .actionButtons a {
+    width: 30%;
+    margin: 2px;
+}
+
+.manageAPIKeyForm .status {
+    padding: 20px 20px 0;
+    text-align: center;
+}
+
+.manageAPIKeyForm .apiForm {
+    width: 350px;
+    margin-top: 20px;
 }

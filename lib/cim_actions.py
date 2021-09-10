@@ -99,6 +99,12 @@ def parse_mv(mvstr):
     return vals
 
 
+def encode_mv(arr):
+    # takes list of strs and returns encoded str in __mv_* multivalue format for splunkd
+    escaped_vals = [i.replace('$', '$$') for i in arr]
+    return "${}$".format(('$;$').join(escaped_vals))
+
+
 class InvalidResultID(Exception):
     pass
 

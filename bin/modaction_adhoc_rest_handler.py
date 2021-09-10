@@ -43,14 +43,15 @@ class ModularActionAdhocRestHandler(PersistentServerConnectionApplication):
         'event_hash')
     TOKENS_TRIGGER_TIME = ('trigger_time',)
     TOKENS_RANDOM = ('#random',)
-    TOKENS_UNAVAILABLE = ('name_hash',)
-    TOKENS_UNAVAILABLE_KV = ('results.file', 'results.url', 'name')
+    TOKENS_UNAVAILABLE = ('name_hash', 'name')
+    TOKENS_UNAVAILABLE_KV = ('results.file', 'results.url')
 
     # Simple regular expression for finding tokens in search commands.
     TEMPLATE_REGEX = re.compile(r'''\$([\w.*#\- ]+)(?:\{([^}]+)\})?\$''')
 
     # key=value replacement
     TEMPLATE_REGEX_KV = re.compile(r"""
+        "?               # Optional opening double quotation mark
         ('?              # Optional opening single quotation mark
         [A-Za-z0-9_.-]+  # A word representing a Splunk field name
         '?)              # Optional closing single quotation mark
@@ -335,7 +336,7 @@ class ModularActionAdhocRestHandler(PersistentServerConnectionApplication):
 
         # Get only the valid modular alert-style parameters
         for k, v in action_contents.items():
-            if k != 'name' and str(v):
+            if k != 'name':
                 v_params[param_template + k] = v
 
         return v_params
@@ -498,7 +499,10 @@ class ModularActionAdhocRestHandler(PersistentServerConnectionApplication):
         if not search.lstrip().startswith(("|", "search")):
             search = "search " + search.lstrip()
 
-        return search.strip() + " | " + alert_cmd
+        if not alert_cmd.strip().startswith("|"):
+            alert_cmd = " | " + alert_cmd
+
+        return search.strip() + alert_cmd
 
     @staticmethod
     def _parse_search(search, session_key):
@@ -555,6 +559,10 @@ class ModularActionAdhocRestHandler(PersistentServerConnectionApplication):
 
         args = {
             'output_mode': 'json',
+            # CIM-944: adhoc_search_level essential to proper field extraction
+            'adhoc_search_level': 'verbose',
+            # CIM-990: preview needs to be false to prevent duped sendalert actions
+            'preview': 'false',
             'search': search
         }
 

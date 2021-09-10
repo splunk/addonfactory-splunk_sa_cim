@@ -719,6 +719,18 @@
           "required": false,
           "multivalue": false,
           "hidden": false
+        },
+        {
+          "comment": {
+            "description": "The unique identifier or event code of the event signature."
+          },
+          "fieldName": "signature_id",
+          "displayName": "signature_id",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": false,
+          "hidden": false
         }
       ],
       "calculations": [

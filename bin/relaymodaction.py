@@ -249,6 +249,23 @@ class RelayModAction(JsonModularInput):
         normalized_maxtime = self.normalize_time(maxtime)
         return alert_action, normalized_maxtime
 
+    def get_python_cmd(self, action_name, alert_actions):
+        """
+        Get python command - based off alert action python.version setting defined in alert_actions.conf
+        """
+        version = None
+        try:
+            version = alert_actions.get(action_name)['content'].get('python.version', 'python')
+        except Exception:
+            self.logger.error('unable to determine python version for alert_action="%s"', action_name)
+
+        if version == 'python3':
+            return 'python3'
+        elif version == 'python2':
+            return 'python2'
+
+        return 'python'
+
     def run(self, params):
         stanza_name = params.get('name').split("://", 1)[1]
         username = params['username']
@@ -314,11 +331,12 @@ class RelayModAction(JsonModularInput):
 
                 if results_file is not None:
                     self.save_search_info(search_info, dispatch_dir)
+                    python_cmd = self.get_python_cmd(action_name, alert_actions)
                     payload['results_file'] = results_file
                     name = alert_action['name']
                     app = alert_action['acl']['app']
                     script = make_splunkhome_path(["etc", "apps", app, "bin", "%s.py" % name])
-                    cmd = [make_splunkhome_path(["bin", "splunk"]), "cmd", "python", script, "--execute"]
+                    cmd = [make_splunkhome_path(["bin", "splunk"]), "cmd", python_cmd, script, "--execute"]
                     try:
                         returncode = self.run_action(cmd, payload, normalized_maxtime)
                         if returncode != 0:

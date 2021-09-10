@@ -423,7 +423,7 @@
           "expression": "if(isnull(http_method) OR http_method=\"\" OR http_method=\"-\",\"unknown\",http_method)"
         },
         {
-          "calculationID": "Web_fillnull_http_referrer",
+          "calculationID": "0Web_fillnull_http_referrer",
           "calculationType": "Eval",
           "outputFields": [
             {
@@ -441,6 +441,27 @@
             }
           ],
           "expression": "if(isnull(http_referrer) OR http_referrer=\"\" OR http_referrer=\"-\",\"unknown\",http_referrer)"
+        },
+        {
+          "calculationID": "1Web_http_referrer_domain",
+          "calculationType": "Rex",
+          "inputField": "http_referrer",
+          "outputFields": [
+            {
+              "comment": {
+                "description": "The domain name contained within the HTTP referrer used in the request.",
+                "recommended": true
+              },
+              "fieldName": "http_referrer_domain",
+              "displayName": "http_referrer_domain",
+              "type": "string",
+              "fieldSearch": "",
+              "required": false,
+              "multivalue": false,
+              "hidden": false
+            }
+          ],
+          "expression": "^(?:http|https|ftp):\\\/\\\/(?:[a-zA-Z0-9\\.\\-]+(?::[a-zA-Z0-9]+)?@)?(?<http_referrer_domain>[^\\\/:]+)(?::[0-9]+)?"
         },
         {
           "calculationID": "Web_fillnull_http_user_agent",
@@ -583,7 +604,7 @@
           "expression": "if(isnull(status) OR status=\"\" OR status=\"-\",\"unknown\",status)"
         },
         {
-          "calculationID": "Web_fillnull_url",
+          "calculationID": "0Web_fillnull_url",
           "calculationType": "Eval",
           "outputFields": [
             {
@@ -603,7 +624,28 @@
           "expression": "if(isnull(url) OR url=\"\" OR url=\"-\",\"unknown\",url)"
         },
         {
-          "calculationID": "Web_url_length",
+          "calculationID": "1Web_url_domain",
+          "calculationType": "Rex",
+          "inputField": "url",
+          "outputFields": [
+            {
+              "comment": {
+                "description": "The domain name contained within the URL of the requested HTTP resource.",
+                "recommended": true
+              },
+              "fieldName": "url_domain",
+              "displayName": "url_domain",
+              "type": "string",
+              "fieldSearch": "",
+              "required": false,
+              "multivalue": false,
+              "hidden": false
+            }
+          ],
+          "expression": "^(?:http|https|ftp):\\\/\\\/(?:[a-zA-Z0-9\\.\\-]+(?::[a-zA-Z0-9]+)?@)?(?<url_domain>[^\\\/:]+)(?::[0-9]+)?"
+        },
+        {
+          "calculationID": "2Web_url_length",
           "calculationType": "Eval",
           "outputFields": [
             {
@@ -695,6 +737,69 @@
       ],
       "children": [
         
+      ]
+    },
+    {
+      "comment": {
+        "tags": [
+          "web",
+          "storage"
+        ]
+      },
+      "objectName": "Storage",
+      "displayName": "Storage",
+      "parentName": "Web",
+      "fields": [
+        {
+          "comment": {
+            "description": "The name of the bucket or storage account.",
+            "ta_relevant": false
+          },
+          "fieldName": "storage_name",
+          "displayName": "storage_name",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": false,
+          "hidden": false
+        },
+        {
+          "comment": {
+            "description": "The operation performed on the storage account.",
+            "ta_relevant": false
+          },
+          "fieldName": "operation",
+          "displayName": "operation",
+          "type": "string",   
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": false,
+          "hidden": false
+        },
+        {
+          "comment": {
+            "description": "The error code that occurred while accessing the storage account.",
+            "ta_relevant": false
+          },
+          "fieldName": "error_code",
+          "displayName": "error_code",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": false,
+          "hidden": false
+        }  
+      ],
+      "calculations": [
+        
+      ],
+      "constraints": [
+        {
+          "search": "tag=storage"
+        }
+      ],
+      "children": [
+         
       ]
     }
   ]

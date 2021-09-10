@@ -115,6 +115,18 @@
         },
         {
           "comment": {
+            "description": "The numeric or vendor specific severity indicator corresponding to the event severity."
+          },
+          "fieldName": "severity_id",
+          "displayName": "severity_id",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": false,
+          "hidden": false
+        },
+        {
+          "comment": {
             "description": "The unique identifier of the service request as it pertains to Splunk.  For example, 14DA67E8-6084-4FA8-9568-48D05969C522@@_internal@@0533eff241db0d892509be46cd3126e30e0f6046."
           },
           "fieldName": "splunk_id",

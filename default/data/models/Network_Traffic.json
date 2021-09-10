@@ -595,6 +595,18 @@
           "required": false,
           "multivalue": true,
           "hidden": false
+        },
+        {
+          "comment": {
+            "description": "The account associated with the network traffic."
+          },
+          "fieldName": "vendor_account",
+          "displayName": "vendor_account",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": false,
+          "hidden": false
         }
       ],
       "calculations": [
@@ -932,7 +944,7 @@
         }
       ],
       "children": [
-        
+
       ]
     },
     {
@@ -946,10 +958,10 @@
       "displayName": "Traffic By Action",
       "parentName": "All_Traffic",
       "fields": [
-        
+
       ],
       "calculations": [
-        
+
       ],
       "constraints": [
         {
@@ -957,7 +969,7 @@
         }
       ],
       "children": [
-        
+
       ]
     },
     {
@@ -971,10 +983,10 @@
       "displayName": "Allowed Traffic",
       "parentName": "Traffic_By_Action",
       "fields": [
-        
+
       ],
       "calculations": [
-        
+
       ],
       "constraints": [
         {
@@ -982,7 +994,7 @@
         }
       ],
       "children": [
-        
+
       ]
     },
     {
@@ -996,10 +1008,10 @@
       "displayName": "Blocked Traffic",
       "parentName": "Traffic_By_Action",
       "fields": [
-        
+
       ],
       "calculations": [
-        
+
       ],
       "constraints": [
         {
@@ -1007,7 +1019,7 @@
         }
       ],
       "children": [
-        
+
       ]
     }
   ]
