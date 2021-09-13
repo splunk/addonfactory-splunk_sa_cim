@@ -16,7 +16,7 @@
       "fields": [
         {
           "comment": {
-            "description": "The body of a message."
+            "description": "This field is deprecated in favor of 'description'."
           },
           "fieldName": "body",
           "displayName": "body",
@@ -28,7 +28,19 @@
         },
         {
           "comment": {
-            "description": "The business unit associated with the destination.",
+            "description": "The description of the alert event."
+          },
+          "fieldName": "description",
+          "displayName": "description",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": false,
+          "hidden": false
+        },
+        {
+          "comment": {
+            "description": "The business unit associated with the destination. This field is automatically provided by asset and identity correlation features of applications like Splunk Enterprise Security. Do not define extractions for this field when writing add-ons.",
             "ta_relevant": false
           },
           "fieldName": "dest_bunit",
@@ -41,7 +53,7 @@
         },
         {
           "comment": {
-            "description": "The category of the destination.",
+            "description": "The category of the destination. This field is automatically provided by asset and identity correlation features of applications like Splunk Enterprise Security. Do not define extractions for this field when writing add-ons.",
             "ta_relevant": false
           },
           "fieldName": "dest_category",
@@ -54,7 +66,7 @@
         },
         {
           "comment": {
-            "description": "The priority of the destination.",
+            "description": "The priority of the destination. This field is automatically provided by asset and identity correlation features of applications like Splunk Enterprise Security. Do not define extractions for this field when writing add-ons.",
             "ta_relevant": false
           },
           "fieldName": "dest_priority",
@@ -67,7 +79,19 @@
         },
         {
           "comment": {
-            "description": "The unique identifier of a message."
+            "description": "The type of the destination object, such as 'instance', 'storage', 'firewall'."
+          },
+          "fieldName": "dest_type",
+          "displayName": "dest_type",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": false,
+          "hidden": false
+        },
+        {
+          "comment": {
+            "description": "The unique identifier of the alert event."
           },
           "fieldName": "id",
           "displayName": "id",
@@ -79,27 +103,19 @@
         },
         {
           "comment": {
-            "description": "The severity of a message. Note: This field is a string. Use the severity_id field for severity ID fields that are integer data types. Specific values are required. Use vendor_severity for the vendor's own human readable strings (such as 'Good', 'Bad', 'Really Bad')",
-            "expected_values": [
-              "critical",
-              "high",
-              "medium",
-              "low",
-              "informational",
-              "unknown"
-            ]
+            "description": "The MITRE ATT&CK technique ID of the alert event, searchable at https:\/\/attack.mitre.org\/techniques"
           },
-          "fieldName": "severity",
-          "displayName": "severity",
+          "fieldName": "mitre_technique_id",
+          "displayName": "mitre_technique_id",
           "type": "string",
           "fieldSearch": "",
           "required": false,
-          "multivalue": false,
+          "multivalue": true,
           "hidden": false
         },
         {
           "comment": {
-            "description": "A numeric severity indicator for a message."
+            "description": "The numeric or vendor specific severity indicator corresponding to the event severity."
           },
           "fieldName": "severity_id",
           "displayName": "severity_id",
@@ -111,10 +127,10 @@
         },
         {
           "comment": {
-            "description": "The source of the message. You can alias or extract this from more specific fields, such as src_host, src_ip, or src_name."
+            "description": "The human-friendly title of the alert event, such as 'API GetAccountPasswordPolicy was invoked using root credentials.' Split by signature_id when aggregating alert events by types."
           },
-          "fieldName": "src",
-          "displayName": "src",
+          "fieldName": "signature",
+          "displayName": "signature",
           "type": "string",
           "fieldSearch": "",
           "required": false,
@@ -123,7 +139,7 @@
         },
         {
           "comment": {
-            "description": "The business unit associated with the source.",
+            "description": "The business unit associated with the source. This field is automatically provided by asset and identity correlation features of applications like Splunk Enterprise Security. Do not define extractions for this field when writing add-ons.",
             "ta_relevant": false
           },
           "fieldName": "src_bunit",
@@ -136,7 +152,7 @@
         },
         {
           "comment": {
-            "description": "The category of the source.",
+            "description": "The category of the source. This field is automatically provided by asset and identity correlation features of applications like Splunk Enterprise Security. Do not define extractions for this field when writing add-ons.",
             "ta_relevant": false
           },
           "fieldName": "src_category",
@@ -149,7 +165,7 @@
         },
         {
           "comment": {
-            "description": "The priority of the source.",
+            "description": "The priority of the source. This field is automatically provided by asset and identity correlation features of applications like Splunk Enterprise Security. Do not define extractions for this field when writing add-ons.",
             "ta_relevant": false
           },
           "fieldName": "src_priority",
@@ -162,7 +178,19 @@
         },
         {
           "comment": {
-            "description": "The subject of the message."
+            "description": "The type of the source object, such as 'instance', 'storage', 'firewall'."
+          },
+          "fieldName": "src_type",
+          "displayName": "src_type",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": false,
+          "hidden": false
+        },
+        {
+          "comment": {
+            "description": "This field is deprecated in favor of 'signature'."
           },
           "fieldName": "subject",
           "displayName": "subject",
@@ -184,6 +212,69 @@
           "required": false,
           "multivalue": true,
           "hidden": false
+        },
+        {
+          "comment": {
+            "description": "The business unit of the user involved in the alert event. This field is automatically provided by asset and identity correlation features of applications like Splunk Enterprise Security. Do not define extractions for this field when writing add-ons.",
+            "ta_relevant": false
+          },
+          "fieldName": "user_bunit",
+          "displayName": "user_bunit",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": false,
+          "hidden": false
+        },
+        {
+          "comment": {
+            "description": "The category of the user involved in the alert event. This field is automatically provided by asset and identity correlation features of applications like Splunk Enterprise Security. Do not define extractions for this field when writing add-ons.",
+            "ta_relevant": false
+          },
+          "fieldName": "user_category",
+          "displayName": "user_category",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": true,
+          "hidden": false
+        },
+        {
+          "comment": {
+            "description": "The priority of the user involved in the alert event. This field is automatically provided by asset and identity correlation features of applications like Splunk Enterprise Security. Do not define extractions for this field when writing add-ons.",
+            "ta_relevant": false
+          },
+          "fieldName": "user_priority",
+          "displayName": "user_priority",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": false,
+          "hidden": false
+        },
+        {
+          "comment": {
+            "description": "The account associated with the alert event."
+          },
+          "fieldName": "vendor_account",
+          "displayName": "vendor_account",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": false,
+          "hidden": false
+        },
+        {
+          "comment": {
+            "description": "The data center region involved in the alert event, such as us-west-2."
+          },
+          "fieldName": "vendor_region",
+          "displayName": "vendor_region",
+          "type": "string",
+          "fieldSearch": "",
+          "required": false,
+          "multivalue": false,
+          "hidden": false
         }
       ],
       "calculations": [
@@ -193,7 +284,7 @@
           "outputFields": [
             {
               "comment": {
-                "description": "The application involved in the event, such as win:app:trendmicro, vmware, nagios.",
+                "description": "The system, service, or application that generated the alert event. Examples include, but are not limited to the following: GuardDuty, SecurityCenter, 3rd party services, win:app:trendmicro, vmware, nagios.",
                 "recommended": true
               },
               "fieldName": "app",
@@ -213,7 +304,7 @@
           "outputFields": [
             {
               "comment": {
-                "description": "The destination of the alert message, such as an email address or SNMP trap. You can alias this from more specific fields, such as dest_host, dest_ip, or dest_name.",
+                "description": "The object that is the 'target' of the alert event. Examples include an email address, SNMP trap, or virtual machine id. You can alias this from more specific fields, such as dest_host, dest_ip, or dest_name.",
                 "recommended": true
               },
               "fieldName": "dest",
@@ -228,17 +319,86 @@
           "expression": "if(isnull(dest) OR dest=\"\",\"unknown\",dest)"
         },
         {
+          "calculationID": "Alerts_fillnull_severity",
+          "calculationType": "Eval",
+          "outputFields": [
+            {
+              "comment": {
+                "description": "The severity of the alert event. Note: This field is a string. Specific values are required. Use the severity_id field for severity ID fields that are integer data types. Use vendor_severity for the vendor's own human readable strings (such as 'Good', 'Bad', 'Really Bad').",
+                "expected_values": [
+                  "critical",
+                  "high",
+                  "medium",
+                  "low",
+                  "informational",
+                  "unknown"
+                ],
+                "recommended": true
+              },
+              "fieldName": "severity",
+              "displayName": "severity",
+              "type": "string",
+              "fieldSearch": "",
+              "required": false,
+              "multivalue": false,
+              "hidden": false
+            }
+          ],
+          "expression": "if(isnull(severity) OR severity=\"\",\"unknown\",severity)"
+        },
+        {
+          "calculationID": "Alerts_fillnull_signature_id",
+          "calculationType": "Eval",
+          "outputFields": [
+            {
+              "comment": {
+                "description": "The vendor specific policy or rule that generated the alert event, such as 'Policy:IAMUser/RootCredentialUsage.'",
+                "recommended": true
+              },
+              "fieldName": "signature_id",
+              "displayName": "signature_id",
+              "type": "string",
+              "fieldSearch": "",
+              "required": false,
+              "multivalue": false,
+              "hidden": false
+            }
+          ],
+          "expression": "if(isnull(signature_id) OR signature_id=\"\",\"unknown\",signature_id)"
+        },
+        {
+          "calculationID": "Alerts_fillnull_src",
+          "calculationType": "Eval",
+          "outputFields": [
+            {
+              "comment": {
+                "description": "The object that is the 'actor' of the alert event. You can alias or extract this from more specific fields, such as src_host, src_ip, or src_name.",
+                "recommended": true
+              },
+              "fieldName": "src",
+              "displayName": "src",
+              "type": "string",
+              "fieldSearch": "",
+              "required": false,
+              "multivalue": false,
+              "hidden": false
+            }
+          ],
+          "expression": "if(isnull(src) OR src=\"\",\"unknown\",src)"
+        },
+        {
           "calculationID": "Alerts_fillnull_type",
           "calculationType": "Eval",
           "outputFields": [
             {
               "comment": {
-                "description": "The message type.",
+                "description": "The alert event type.",
                 "expected_values": [
                   "alarm",
                   "alert",
                   "event",
                   "task",
+                  "warning",
                   "unknown"
                 ],
                 "recommended": true
@@ -253,6 +413,46 @@
             }
           ],
           "expression": "if(isnull(type) OR type=\"\",\"unknown\",type)"
+        },
+        {
+          "calculationID": "Alerts_fillnull_user",
+          "calculationType": "Eval",
+          "outputFields": [
+            {
+              "comment": {
+                "description": "The user involved in the alert event.",
+                "recommended": true
+              },
+              "fieldName": "user",
+              "displayName": "user",
+              "type": "string",
+              "fieldSearch": "",
+              "required": false,
+              "multivalue": false,
+              "hidden": false
+            }
+          ],
+          "expression": "if(isnull(user) OR user=\"\",\"unknown\",user)"
+        },
+        {
+          "calculationID": "Alerts_fillnull_user_name",
+          "calculationType": "Eval",
+          "outputFields": [
+            {
+              "comment": {
+                "description": "The user_name of user involved in the alert event.",
+                "recommended": true
+              },
+              "fieldName": "user_name",
+              "displayName": "user_name",
+              "type": "string",
+              "fieldSearch": "",
+              "required": false,
+              "multivalue": false,
+              "hidden": false
+            }
+          ],
+          "expression": "if(isnull(user_name) OR user_name=\"\",\"unknown\",user_name)"
         }
       ],
       "constraints": [
@@ -261,7 +461,7 @@
         }
       ],
       "children": [
-        
+
       ]
     }
   ]

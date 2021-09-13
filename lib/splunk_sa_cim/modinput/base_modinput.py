@@ -1,5 +1,5 @@
 """
-Copyright (C) 2005 - 2019 Splunk Inc. All Rights Reserved.
+Copyright (C) 2005 - 2020 Splunk Inc. All Rights Reserved.
 """
 import argparse
 import getpass
@@ -12,23 +12,26 @@ import time
 import xml.dom
 import splunk
 import splunk.auth
+import splunk.rest
 import splunk.version
-from splunk.models.app import App
+
 from .fields import BooleanField
 from .fields import Field
 from .fields import FieldValidationException
 from .fields import IntervalField
 from .. import log
+from splunk.util import normalizeBoolean
 
+try:
+    from urllib.request import quote
+except ImportError:
+    from urllib import quote
 
 # Define logger using the name of the script here, versus in the modular_input class.
 logger = log.setup_logger(name='python_modular_input', level=logging.INFO)
 
 
 class ModularInputConfig(object):
-
-    logger = logging.getLogger('python_modular_input')
-
     def __init__(self, server_host, server_uri, session_key, checkpoint_dir, configuration):
         self.server_host = server_host
         self.server_uri = server_uri
@@ -37,8 +40,13 @@ class ModularInputConfig(object):
         self.configuration = configuration
 
     def __str__(self):
-        attrs = ['server_host', 'server_uri', 'session_key',
-                 'checkpoint_dir', 'configuration']
+        attrs = [
+            'server_host',
+            'server_uri',
+            'session_key',
+            'checkpoint_dir',
+            'configuration'
+        ]
         return str({attr: str(getattr(self, attr)) for attr in attrs})
 
     @staticmethod
@@ -103,22 +111,26 @@ class ModularInputConfig(object):
         """
         configuration = {}
         doc = json.loads(config_str_json)
-        server_host = doc.get("server_host")
-        server_uri = doc.get("server_uri")
-        session_key = doc.get("session_key")
-        checkpoint_dir = doc.get("checkpoint_dir")
-        conf = doc.get("configuration")
+        server_host = doc.get('server_host')
+        server_uri = doc.get('server_uri')
+        session_key = doc.get('session_key')
+        checkpoint_dir = doc.get('checkpoint_dir')
+        conf = doc.get('configuration')
 
-        if conf:
+        if isinstance(conf, dict):
             for stanza_name, stanza in conf.items():
-                config = {}
-                config["name"] = stanza_name
-                config.update(stanza.get("settings", {}))
+                config = {
+                    'name': stanza_name,
+                    '_app': stanza.get('app')
+                }
+                config.update(stanza.get('settings', {}))
                 configuration[stanza_name] = config
+
         return ModularInputConfig(server_host, server_uri, session_key, checkpoint_dir, configuration)
 
 
 class BaseModularInput(object):
+    logger = logger
 
     # These arguments cover the standard fields that are always supplied
     standard_args = [
@@ -133,24 +145,40 @@ class BaseModularInput(object):
 
     checkpoint_dir = None
 
-    def __init__(self, scheme_args, args=None):
+    def __init__(self, scheme_args, args=None, this_logger=None):
         """
         Set up the modular input.
 
         Arguments:
-        title -- The title of the modular input (e.g. "Database Connector")
-        description -- A description of the input (e.g. "Get data from a database")
+        scheme_args -- The title (e.g. "Database Connector"), description of the input (e.g. "Get data from a database"), etc.
         args -- A list of Field instances for validating the arguments
+        this_logger - A logger instance (defaults to None)
         """
+        # default to global logger (python_modular_input)
+        self.logger = this_logger if this_logger is not None else logger
 
         # Set the scheme arguments.
-        for arg in ['title', 'description', 'use_external_validation', 'streaming_mode', 'use_single_instance']:
+        for arg in [
+                'title',
+                'description',
+                'use_external_validation',
+                'streaming_mode',
+                'use_single_instance']:
             setattr(self, arg, self._is_valid_param(arg, scheme_args.get(arg)))
 
-        if args is None:
-            self.args = []
-        else:
-            self.args = args[:]
+        for arg in ['always_run', 'requires_kvstore']:
+            if arg in scheme_args and normalizeBoolean(scheme_args[arg]) is True:
+                setattr(self, arg, True)
+            else:
+                setattr(self, arg, False)
+
+        for arg in ['kvstore_wait_time']:
+            try:
+                setattr(self, arg, int(scheme_args[arg]))
+            except Exception:
+                setattr(self, arg, 0)
+
+        self.args = [] if args is None else args[:]
 
     def _is_valid_param(self, name, val):
         """Raise an error if the parameter is None or empty."""
@@ -183,7 +211,7 @@ class BaseModularInput(object):
         out -- The stream to write the message to (defaults to standard output)
         """
 
-        logger.info("Modular input: scheme requested")
+        self.logger.info("Modular input: scheme requested")
         out.write(self.get_scheme())
 
         return True
@@ -217,7 +245,7 @@ class BaseModularInput(object):
         Validate the argument dictionary where each key is a stanza.
 
         Arguments:
-        arguments -- The arguments as an dictionary where the key is the stanza and the value is a dictionary of the values.
+        arguments -- The parameters as a dictionary.
         """
 
         # Check each stanza
@@ -250,7 +278,7 @@ class BaseModularInput(object):
                 cleaned_params[name] = None if value == '' else all_args[name].to_python(value)
 
             # Throw an exception if the argument could not be found
-            elif name != 'python.version':  # exclude python.version
+            elif name not in ['_app', 'python.version']:  # exclude _app, python.version
                 raise FieldValidationException(
                     "The parameter '%s' is not a valid argument" % name)
 
@@ -259,13 +287,12 @@ class BaseModularInput(object):
     def print_error(self, error, out=sys.stdout):
         raise Exception("print_error function was not implemented")
 
-    def do_run(self, in_stream=sys.stdin, log_exception_and_continue=False, always_run=False):
+    def do_run(self, in_stream=sys.stdin, log_exception_and_continue=False):
         """
         Read the config from standard input and return the configuration.
 
         in_stream -- The stream to get the input from (defaults to standard input)
         log_exception_and_continue -- If true, exceptions will not be thrown for invalid configurations and instead the stanza will be skipped.
-        always_run -- If true, call run() regardless of whether stanzas exist
         """
 
         # Run the modular import
@@ -288,7 +315,7 @@ class BaseModularInput(object):
             except FieldValidationException as e:
                 if log_exception_and_continue:
                     # Discard the invalid stanza.
-                    logger.error("Discarding invalid input stanza '%s': %s" % (
+                    self.logger.error("Discarding invalid input stanza '%s': %s" % (
                         stanza_name, str(e)))
                 else:
                     raise e
@@ -308,7 +335,28 @@ class BaseModularInput(object):
 
         # TODO: A run() method may pass results back for optional processing
 
-        if stanzas or always_run:
+        if stanzas or self.always_run:
+            # kvstore required/wait handling
+            if self.requires_kvstore:
+                kvstore_ready = self.is_kvstore_ready(assume_true_on_error=True)
+
+                if not kvstore_ready and self.kvstore_wait_time > 0:
+                    self.logger.info(
+                        "Modular input (%s) sleeping (for %s seconds) because kvstore was not ready",
+                        getattr(self, 'title', 'unknown'),
+                        self.kvstore_wait_time
+                    )
+                    time.sleep(self.kvstore_wait_time)
+                    kvstore_ready = self.is_kvstore_ready(assume_true_on_error=True)
+
+                if not kvstore_ready:
+                    self.logger.warning(
+                        "Modular input (%s) did not execute because kvstore was not ready",
+                        getattr(self, 'title', 'unknown')
+                    )
+                    # Exit with zero since this most likely represents kvstore initializing
+                    sys.exit(0)
+
             if single_instance:
                 # Run the input across all defined stanzas and exit.
                 self.run(stanzas)
@@ -319,64 +367,32 @@ class BaseModularInput(object):
                     # Retrieve the single input stanza.
                     stanza = stanzas[0]
 
-                try:
-                    duration = int(stanza.get('duration', -1))
-                except ValueError as e:
-                    # This should never happen unless the author of the modular input
-                    # fails to specify "duration" as an IntegerField.
-                    logger.error("Input stanza '%s' specified an invalid duration: %s", stanza.get(
-                        'name', 'unknown'), e)
-                    # Exit with non-zero exit code so services/admin/inputstatus correctly reflects script status.
-                    sys.exit(1)
-
-                # Save the checkpoint(s).
-                stanza_name = stanza.get('name', None)
-
-                # If there splunk 6.0 and interval field is defined, then ignore duration fields completely
-                try:
-                    interval = int(stanza.get("interval", -1))
-                except (ValueError, TypeError):
-                    interval = -1
-
-                if interval >= 0 and splunk.version.__version__ >= '6.0':
-                    # Run the single stanza and exit.
-                    self.run(stanza)
-                else:
-                    # Run duration field
-                    if duration > 0 and self.checkpoint_dir:
-                        # Make sure lastrun and duration is less than current time,
-                        # otherwise if modular input is stopped and started (immediately)
-                        # less than defined duration time then needs_another_run returns false always, which leads to
-                        # modular input to run as single stanza and exist.
-                        while True:
-                            # TODO: Checkpoints will build up in the config directory when
-                            # the input stanza changes. This should probably be modified to
-                            # use the name of the input itself, unhashed. Name collisions would
-                            # be a configuration error.
-                            self.save_checkpoint(
-                                self.checkpoint_dir, stanza_name, int(time.time()))
-                            self.run(stanza)
-                            # Results processing, if any, could occur here.
-                            time.sleep(BaseModularInput.time_to_next_run(
-                                self.checkpoint_dir, stanza_name, duration))
-                    else:
-                        # Duration is not defined
-                        # Run the single stanza and exit for Splunk 5.x
-                        self.run(stanza)
-
+                self.run(stanza)
         else:
-            logger.info("No input stanzas defined")
+            self.logger.info("No input stanzas defined")
 
-    def run(self, stanza, cleaned_params):
+    def run(self, stanza):
         """
         Run the input using the arguments provided.
 
         Arguments:
         stanza -- The name of the stanza
-        cleaned_params -- The arguments following validation and conversion to Python objects.
+        """
+        raise NotImplementedError("Run function was not implemented")
+
+    @staticmethod
+    def get_log_level(stanzas, debug_param='debug'):
+        """
+        Get debug setting from stanzas.
+
+        Arguments:
+        stanzas -- The list of stanzas being processed by the modinput.
         """
 
-        raise Exception("Run function was not implemented")
+        if stanzas and any(normalizeBoolean(stanza.get(debug_param)) is True for stanza in stanzas):
+            return logging.DEBUG
+
+        return logging.INFO
 
     @staticmethod
     def get_file_path(checkpoint_dir, stanza):
@@ -431,16 +447,18 @@ class BaseModularInput(object):
 
         except IOError:
             # The file likely doesn't exist
-            logger.exception("The checkpoint file likely doesn't exist")
+            cls.logger.exception("The checkpoint file likely doesn't exist")
             return True
         except ValueError:
             # The file could not be loaded
-            logger.exception("The checkpoint file could not be loaded")
+            cls.logger.exception("The checkpoint file could not be loaded")
             return True
         except Exception as e:
             # Catch all that enforces an extra run
-            logger.exception(
-                "Unexpected exception caught, enforcing extra run, exception info: " + str(e))
+            cls.logger.exception(
+                "Unexpected exception caught, enforcing extra run, exception info: ",
+                e
+            )
             return True
 
     @classmethod
@@ -466,17 +484,19 @@ class BaseModularInput(object):
             return time_to_next
         except IOError:
             # The file likely doesn't exist
-            logger.warning(
+            cls.logger.warning(
                 "Could not read checkpoint file for last time run, likely does not exist, if this persists debug input immediately")
             return 1
         except ValueError:
             # The file could not be loaded
-            logger.error(
+            cls.logger.error(
                 "Could not read checkpoint file for last time run, if this persists debug input immediately")
             return 1
         except Exception as e:
-            logger.exception(
-                "Unexpected exception caught, enforcing extra run, exception info: " + str(e))
+            cls.logger.exception(
+                "Unexpected exception caught, enforcing extra run, exception info: ",
+                e
+            )
             return 1
 
     @classmethod
@@ -500,7 +520,7 @@ class BaseModularInput(object):
             json.dump(d, fp)
 
         except Exception:
-            logger.exception("Failed to save checkpoint directory")
+            cls.logger.exception("Failed to save checkpoint directory")
         finally:
             if fp is not None:
                 fp.close()
@@ -529,7 +549,7 @@ class BaseModularInput(object):
         checkpoint_dir = checkpoint_dir or self._input_config.checkpoint_dir
         return os.path.isfile(os.path.join(checkpoint_dir, filename))
 
-    def delete_checkpoint_data(self, filename, checkpoint_dir=None):
+    def delete_checkpoint_data(self, filename, checkpoint_dir=None, raise_err=False):
         """
         Delete arbitrary checkpoint data.
 
@@ -538,38 +558,28 @@ class BaseModularInput(object):
         checkpoint_dir -- The directory where checkpoints ought to be saved. Should
             be set only if the intent is to read data from the checkpoint directory
             of a different modular input.
+        raise_err -- Determines if errors should be raised
 
         Returns:
-        True if the data is successfully saved, False otherwise.
+        True if file is successfully removed, False otherwise.
         """
         checkpoint_dir = checkpoint_dir or self._input_config.checkpoint_dir
+        checkpoint_fpath = os.path.join(checkpoint_dir, filename)
+        exists = os.path.exists(checkpoint_fpath)
         try:
-            os.unlink(os.path.join(checkpoint_dir, filename))
+            os.unlink(checkpoint_fpath)
             return True
-        except IOError:
-            logger.exception('msg="IOError exception when deleting checkpoint data" checkpoint_dir="{}" filename="{}"'.format(checkpoint_dir, filename))
+        except Exception as e:
+            if raise_err and exists:
+                raise e
+            else:
+                self.logger.debug(
+                    'msg=%s checkpoint_dir="%s" filename="%s"',
+                    e,
+                    checkpoint_dir,
+                    filename
+                )
         return False
-
-        def delete_checkpoint_data(self, filename, checkpoint_dir=None):
-            """
-            Delete arbitrary checkpoint data.
-
-            Arguments:
-            filename -- The name of the file to create in the checkpoint directory.
-            checkpoint_dir -- The directory where checkpoints ought to be saved. Should
-                be set only if the intent is to read data from the checkpoint directory
-                of a different modular input.
-
-            Returns:
-            True if the data is successfully saved, False otherwise.
-            """
-            checkpoint_dir = checkpoint_dir or self._input_config.checkpoint_dir
-            try:
-                os.unlink(os.path.join(checkpoint_dir, filename))
-                return True
-            except IOError:
-                logger.exception('msg="IOError exception when deleting checkpoint data" checkpoint_dir="{}" filename="{}"'.format(checkpoint_dir, filename))
-            return False
 
     def set_checkpoint_data(self, filename, data, checkpoint_dir=None):
         """
@@ -597,11 +607,23 @@ class BaseModularInput(object):
                 json.dump(data, fp)
                 return True
         except IOError:
-            logger.exception('msg="IOError exception when saving checkpoint data" checkpoint_dir="{}" filename="{}"'.format(checkpoint_dir, filename))
+            self.logger.exception(
+                'msg="IOError exception when saving checkpoint data" checkpoint_dir="%s" filename="%s"',
+                checkpoint_dir,
+                filename
+            )
         except ValueError:
-            logger.exception('msg="ValueError when saving checkpoint data (perhaps invalid JSON)" checkpoint_dir="{}" filename="{}"'.format(checkpoint_dir, filename))
+            self.logger.exception(
+                'msg="ValueError when saving checkpoint data (perhaps invalid JSON)" checkpoint_dir="%s" filename="%s"',
+                checkpoint_dir,
+                filename
+            )
         except Exception:
-            logger.exception('msg="Unknown exception when saving checkpoint data" checkpoint_dir="{}" filename="{}"'.format(checkpoint_dir, filename))
+            self.logger.exception(
+                'msg="Unknown exception when saving checkpoint data" checkpoint_dir="%s" filename="%s"',
+                checkpoint_dir,
+                filename
+            )
         return False
 
     def get_checkpoint_data(self, filename, checkpoint_dir=None, raise_known_exceptions=False):
@@ -631,11 +653,20 @@ class BaseModularInput(object):
                 with open(checkpoint_path, 'r') as fp:  # noqa
                     data = json.load(fp)
         except (IOError, ValueError) as e:
-            logger.exception('msg="Exception when reading checkpoint data" checkpoint_dir="{}" filename="{}" exception="%s"'.format(checkpoint_dir, filename, e))
+            self.logger.exception(
+                'msg="Exception when reading checkpoint data" checkpoint_dir="%s" filename="%s" exception="%s"',
+                checkpoint_dir,
+                filename,
+                e
+            )
             if raise_known_exceptions:
                 raise
         except Exception:
-            logger.exception('msg="Unknown exception when reading checkpoint data" checkpoint_dir="{}" filename="{}"'.format(checkpoint_dir, filename))
+            self.logger.exception(
+                'msg="Unknown exception when reading checkpoint data" checkpoint_dir="%s" filename="%s"',
+                checkpoint_dir,
+                filename
+            )
             raise
 
         return data
@@ -701,27 +732,26 @@ class BaseModularInput(object):
 
         return parser.parse_args(argv)
 
-    def execute(self, in_stream=sys.stdin, out_stream=sys.stdout, always_run=False):
+    def execute(self, in_stream=sys.stdin, out_stream=sys.stdout):
         """
         Get the arguments that were provided from the command-line and execute the script.
 
         Arguments:
         in_stream -- The stream to get the input from (defaults to standard input)
         out_stream -- The stream to write the output to (defaults to standard output)
-        always_run -- Passed to do_run()
         """
 
         # Invalid arguments will cause the modular input to return usage here.
         args = self._parse_args(sys.argv[1:])
 
         try:
-            logger.info("Execute called")
+            self.logger.debug("Execute called")
 
             if args.scheme:
                 self.do_scheme(out_stream)
 
             elif args.validate:
-                logger.info("Modular input: validate arguments called")
+                self.logger.info("Modular input: validate arguments called")
 
                 # Exit with a code of -1 if validation failed
                 if not self.do_validation():
@@ -736,14 +766,14 @@ class BaseModularInput(object):
                             args.password = getpass.getpass(
                                 "Splunk password: ")
                         except Exception:
-                            logger.exception(
+                            self.logger.exception(
                                 "Modular input: could not retrieve Splunk password.")
 
                     try:
                         self._alt_session_key = splunk.auth.getSessionKey(
                             args.username, args.password)
                     except Exception:
-                        logger.exception(
+                        self.logger.exception(
                             "Modular input: session key override failed.")
 
                 # If specified, override the data passed on sys.stdin.
@@ -751,26 +781,25 @@ class BaseModularInput(object):
                     try:
                         self.do_run(
                             args.infile,
-                            log_exception_and_continue=True,
-                            always_run=always_run)
+                            log_exception_and_continue=True
+                        )
                     except IOError:
-                        logger.exception(
+                        self.logger.exception(
                             "Modular input: modinput configuration could not be read from file %s.", args.infile.name)
                 else:
                     try:
                         self.do_run(
                             in_stream,
-                            log_exception_and_continue=True,
-                            always_run=always_run)
+                            log_exception_and_continue=True
+                        )
                     except IOError:
-                        logger.exception(
+                        self.logger.exception(
                             "Modular input: modinput configuration could not be read from input stream.")
 
-            logger.info("Execution completed.")
+            self.logger.debug("Execution completed.")
 
         except Exception as e:
-
-            logger.exception("Execution failed: %s" % (str(e)))
+            self.logger.exception("Execution failed: %s" % (str(e)))
 
             # Make sure to grab any exceptions so that we can print a valid error message
             self.print_error(str(e), out_stream)
@@ -828,13 +857,32 @@ class BaseModularInput(object):
                 output.append((stanza_name, None, None, None))
         return output
 
-    def is_configured(self, app=None, assume_true_on_error=False):
-        if app:
-            try:
-                app = App.get(App.build_id(app, '', 'nobody'),
-                              self._input_config.session_key)
-                return app.is_configured
-            except splunk.RESTException:
-                return assume_true_on_error
-        else:
+    def is_configured(self, app, assume_true_on_error=False):
+        try:
+            unused_r, c = splunk.rest.simpleRequest(
+                'apps/local/{0}'.format(quote(app, safe='')),
+                sessionKey=self._input_config.session_key,
+                getargs={'output_mode': 'json'},
+                raiseAllErrors=True
+            )
+
+            c = json.loads(c)['entry'][0]['content']
+            return normalizeBoolean(c['configured']) is True
+        except Exception:
+            return assume_true_on_error
+
+    def is_kvstore_ready(self, assume_true_on_error=False):
+        try:
+            unused_r, c = splunk.rest.simpleRequest(
+                'kvstore/status/status',
+                sessionKey=self._input_config.session_key,
+                getargs={'output_mode': 'json'},
+                raiseAllErrors=True
+            )
+
+            c = json.loads(c)['entry'][0]['content']
+
+            return c['current']['status'] == 'ready'
+        except Exception as e:
+            self.logger.warn(e)
             return assume_true_on_error

@@ -36,7 +36,10 @@ class JsonModularInput(BaseModularInput):
         return event
 
     def _print_event(self, event):
-        """Adds a single event or a list of evnets to JSON streaming output. """
+        """
+        Adds a single event or a list of evnets to JSON streaming output.
+        """
+
         if isinstance(event, list):
             return ''.join([json.dumps(evt) for evt in event])
         else:
@@ -88,7 +91,7 @@ class JsonModularInput(BaseModularInput):
         out -- The stream to write the message to (defaults to standard output)
         """
 
-        out.write(json.dumps({'error': error}))
+        json.dump({'message': error}, out)
 
     def read_config(self, in_stream=sys.stdin):
         """
@@ -96,6 +99,7 @@ class JsonModularInput(BaseModularInput):
 
         in_stream -- The stream to get the input from (defaults to standard input)
         """
+
         config_str_json = in_stream.read()
         return ModularInputConfig.get_config_from_json(config_str_json)
 
@@ -113,4 +117,8 @@ class JsonModularInput(BaseModularInput):
         # Parse the validation JSON
         doc = json.loads(val_str)
         items = doc.get("items")
-        return list(items.values())[0] if items else {}
+        stanza = list(items)[0]
+        params = items[stanza]
+        params['name'] = stanza
+
+        return params if items else {}

@@ -558,7 +558,7 @@
           "expression": "if(isnull(src) OR src=\"\",\"unknown\",src)"
         },
         {
-          "calculationID": "Email_0fillnull_recipient",
+          "calculationID": "0Email_fillnull_recipient",
           "calculationType": "Eval",
           "outputFields": [
             {
@@ -578,7 +578,28 @@
           "expression": "if(isnull(recipient) OR recipient=\"\",\"unknown\",recipient)"
         },
         {
-          "calculationID": "Email_fillnull_recipient_count",
+          "calculationID": "1Email_recipient_domain",
+          "calculationType": "Rex",
+          "inputField": "recipient",
+          "outputFields": [
+            {
+              "comment": {
+                "description": "The domain name contained within the recipient email addresses.",
+                "recommended": true
+              },
+              "fieldName": "recipient_domain",
+              "displayName": "recipient_domain",
+              "type": "string",
+              "fieldSearch": "",
+              "required": false,
+              "multivalue": false,
+              "hidden": false
+            }
+          ],
+          "expression": "^.*@(?<recipient_domain>.+)$"
+        },
+        {
+          "calculationID": "2Email_recipient_count",
           "calculationType": "Eval",
           "outputFields": [
             {
@@ -598,7 +619,7 @@
           "expression": "case(isnum(recipient_count),recipient_count,isnotnull(recipient),mvcount(recipient),1=1,1)"
         },
         {
-          "calculationID": "Email_fillnull_src_user",
+          "calculationID": "0Email_fillnull_src_user",
           "calculationType": "Eval",
           "outputFields": [
             {
@@ -616,6 +637,27 @@
             }
           ],
           "expression": "if(isnull(src_user) OR src_user=\"\",\"unknown\",src_user)"
+        },
+        {
+          "calculationID": "1Email_src_user_domain",
+          "calculationType": "Rex",
+          "inputField": "src_user",
+          "outputFields": [
+            {
+              "comment": {
+                "description": "The domain name contained within the email address of the message sender.",
+                "recommended": true
+              },
+              "fieldName": "src_user_domain",
+              "displayName": "src_user_domain",
+              "type": "string",
+              "fieldSearch": "",
+              "required": false,
+              "multivalue": false,
+              "hidden": false
+            }
+          ],
+          "expression": "^.*@(?<src_user_domain>.+)$"
         },
         {
           "calculationID": "Email_vendor_product",

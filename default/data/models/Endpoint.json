@@ -797,6 +797,26 @@
           "expression": "if(isnull(dest) OR dest=\"\",\"unknown\",dest)"
         },
         {
+          "calculationID": "Endpoint_Processes_fillnull_original_file_name",
+          "calculationType": "Eval",
+          "outputFields": [
+            {
+              "comment": {
+                "description": "Original name of the file not including path.",
+                "recommended": true
+              },
+              "fieldName": "original_file_name",
+              "displayName": "original_file_name",
+              "type": "string",
+              "fieldSearch": "",
+              "required": false,
+              "multivalue": false,
+              "hidden": false
+            }
+          ],
+          "expression": "if(isnull(original_file_name) OR original_file_name=\"\",\"unknown\",original_file_name)"
+        },
+        {
           "calculationID": "Endpoint_Processes_fillnull_parent_process",
           "calculationType": "Eval",
           "outputFields": [

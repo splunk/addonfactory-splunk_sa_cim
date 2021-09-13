@@ -555,6 +555,27 @@
           "expression": "if(isnull(ssl_issuer_common_name) OR ssl_issuer_common_name=\"\",\"unknown\",ssl_issuer_common_name)"
         },
         {
+          "calculationID": "SSL_ssl_issuer_email_domain",
+          "calculationType": "Rex",
+          "inputField": "ssl_issuer_email",
+          "outputFields": [
+            {
+              "comment": {
+                "description": "The domain name contained within the certificate issuer's email address.",
+                "recommended": true
+              },
+              "fieldName": "ssl_issuer_email_domain",
+              "displayName": "ssl_issuer_email_domain",
+              "type": "string",
+              "fieldSearch": "",
+              "required": false,
+              "multivalue": false,
+              "hidden": false
+            }
+          ],
+          "expression": "^.*@(?<ssl_issuer_email_domain>.+)$"
+        },
+        {
           "calculationID": "SSL_fillnull_ssl_subject",
           "calculationType": "Eval",
           "outputFields": [
@@ -593,6 +614,27 @@
             }
           ],
           "expression": "if(isnull(ssl_subject_common_name) OR ssl_subject_common_name=\"\",\"unknown\",ssl_subject_common_name)"
+        },
+        {
+          "calculationID": "SSL_ssl_subject_email_domain",
+          "calculationType": "Rex",
+          "inputField": "ssl_subject_email",
+          "outputFields": [
+            {
+              "comment": {
+                "description": "The domain name contained within the certificate subject's email address.",
+                "recommended": true
+              },
+              "fieldName": "ssl_subject_email_domain",
+              "displayName": "ssl_subject_email_domain",
+              "type": "string",
+              "fieldSearch": "",
+              "required": false,
+              "multivalue": false,
+              "hidden": false
+            }
+          ],
+          "expression": "^.*@(?<ssl_subject_email_domain>.+)$"
         },
         {
           "calculationID": "SSL_0validity_window",
