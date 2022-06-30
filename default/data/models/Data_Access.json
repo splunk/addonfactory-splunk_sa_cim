@@ -390,16 +390,16 @@
           "expression": "if(isnull(src) OR src=\"\",\"unknown\",src)"
         },
         {
-          "calculationID": "Data_Access_fillnull_tenant_id",
+          "calculationID": "Data_Access_fillnull_vendor_account",
           "calculationType": "Eval",
           "outputFields": [
             {
               "comment": {
-                "description": "Tenant ID in multi-tenant environments.",
+                "description": "The account that manages the user that initiated the request.",
                 "recommended": true
               },
-              "fieldName": "tenant_id",
-              "displayName": "tenant_id",
+              "fieldName": "vendor_account",
+              "displayName": "vendor_account",
               "type": "string",
               "fieldSearch": "",
               "required": false,
@@ -407,7 +407,7 @@
               "hidden": false
             }
           ],
-          "expression": "if(isnull(tenant_id) OR tenant_id=\"\",\"unknown\",tenant_id)"
+          "expression": "if(isnull(vendor_account) OR vendor_account=\"\",\"unknown\",vendor_account)"
         },
         {
           "calculationID": "All_Changes_fillnull_user",
