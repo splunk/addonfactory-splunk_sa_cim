@@ -544,11 +544,14 @@
                   "created",
                   "deleted",
                   "modified",
-                  "read",
                   "stopped",
+                  "lockout",
+                  "read",
+                  "logoff",
                   "updated",
                   "started",
-                  "restarted"
+                  "restarted",
+                  "unlocked"
                 ],
                 "recommended": true
               },

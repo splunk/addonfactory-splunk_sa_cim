@@ -5,7 +5,7 @@
     "id": {
       "group": null,
       "name": "Splunk_SA_CIM",
-      "version": "4.20.0"
+      "version": "5.0.1"
     },
     "author": [
       {

@@ -1,10 +1,6 @@
-<dashboard script="modaction_api_key.js" stylesheet="modaction_api_key.css" hideEdit="true" isDashboard="false">
+<dashboard version="1.1">
   <label>Modular Action API Key</label>
   <row>
-    <panel>
-      <html>
-        <div id="modaction_api_key_container"/>
-      </html>
-    </panel>
-  </row>
+		<html><p>This view has been deprecated.</p></html>
+	</row>
 </dashboard>
